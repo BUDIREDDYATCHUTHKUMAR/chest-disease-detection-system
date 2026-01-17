@@ -1,31 +1,27 @@
-# Dataset Setup Instructions (Pneumonia Detection)
+# NIH Chest X-ray Dataset Setup
 
-## 1. Important Note
-The application is currently adapted for the **Chest X-Ray Images (Pneumonia)** dataset.
+The system is configured for the **NIH Chest X-ray Dataset**.
 
-## 2. Directory Structure
-Your `data` folder should look like this (nested folders are handled automatically):
+## Required File Structure
+Please ensure your `data` folder looks EXACTLY like this:
 
 ```
 data/
 └── raw/
-    └── images/
-        ├── train/
-        │   ├── NORMAL/
-        │   └── PNEUMONIA/
-        ├── test/
-        │   ├── NORMAL/
-        │   └── PNEUMONIA/
-        └── val/
-            ├── NORMAL/
-            └── PNEUMONIA/
+    ├── Data_Entry_2017.csv  <-- The metadata CSV file
+    └── images/              <-- Folder containing all .png images
+        ├── 00000001_000.png
+        ├── 00000001_001.png
+        └── ...
 ```
 
-## 3. Processing
-Run the cleaning script to generate standard CSV files for the model:
-```bash
-cd backend/ml
-python clean_data.py
-```
-
-This will create `train.csv`, `val.csv`, and `test.csv` in `data/processed/`.
+## Instructions
+1.  **Download** the dataset info and images.
+2.  **Extract** `Data_Entry_2017.csv` to `data/raw/`.
+3.  **Extract** all image tarballs.
+4.  **Move** all images into `data/raw/images/`.
+    *   *Note: Do not have subfolders like `images_001/images`. Move the files up so they are all directly inside `data/raw/images/`.*
+5.  **Run Cleaning**:
+    ```bash
+    python -m backend.ml.clean_data
+    ```

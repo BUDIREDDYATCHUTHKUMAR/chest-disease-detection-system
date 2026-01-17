@@ -4,7 +4,7 @@
 A production-ready healthcare AI software system for detecting thoracic diseases from chest X-rays.
 
 ## Project Structure
-- `backend/`: Django API + ML Inference
+- `backend/`: FastAPI + ML Inference
 - `frontend/`: React + TailwindCSS UI
 - `data/`: Dataset storage
 - `notebooks/`: EDA and model experiments
@@ -12,23 +12,26 @@ A production-ready healthcare AI software system for detecting thoracic diseases
 
 ## Getting Started
 
-### 1. Python Virtual Environment
+### 1. Backend (FastAPI)
 ```bash
-# Windows
+# Activate Virtual Env (Windows)
 .\venv\Scripts\Activate.ps1
-# Mac/Linux
-source venv/bin/activate
 
+# Install Dependencies
 pip install -r backend/requirements.txt
+
+# Run Server
+uvicorn backend.api:app --reload
 ```
 
-### 2. Frontend
+### 2. Frontend (React)
 ```bash
 cd frontend
 npm install
+npm run dev
 ```
 
-### 3. Docker
+### 3. Docker (Optional)
 ```bash
 docker-compose up --build
 ```
@@ -38,12 +41,15 @@ See [TRAINER_GUIDE.md](TRAINER_GUIDE.md) for a deep dive into the project archit
 
 ## Phases
 1. Environment Setup (Complete)
-2. Dataset Ingestion (Next)
-3. Data Processing
-4. Model Development
-5. Explainable AI
-6. Backend Dev
-7. Frontend Dev
+2. Dataset Ingestion (Complete)
+3. Data Processing (Complete)
+4. Model Development (Complete)
+5. Explainable AI (Complete)
+6. Backend Dev (Complete)
+7. Frontend Dev (Complete)
+8. Integration (Complete)
+9. Deployment
+10. Documentation
 8. Integration
 9. Deployment
 10. Documentation

@@ -2,47 +2,83 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 try:
-    from .data_loader import get_data_paths, load_pneumonia_dataset
+    from .data_loader import get_data_paths, load_metadata, map_images
 except ImportError:
-    from data_loader import get_data_paths, load_pneumonia_dataset
+    from data_loader import get_data_paths, load_metadata, map_images
 
-def clean_and_split():
+def clean_and_split(test_size=0.2, val_size=0.1, random_state=42):
     paths = get_data_paths()
-    print("Initializing Pneumonia Dataset Adapter...")
+    print("Loading metadata...")
     
-    # Load Data using directory scanning
-    df = load_pneumonia_dataset(paths['images_dir'])
+    try:
+        df = load_metadata(paths['csv_path'])
+    except FileNotFoundError:
+        print("ERROR: Data_Entry_2017.csv not found in data/raw/")
+        return
+
+    print("Mapping images...")
+    df = map_images(df, paths['images_dir'])
     
     if len(df) == 0:
-        print("ERROR: No images found! Please check data/raw/images")
+        print("ERROR: No valid images found matching the CSV.")
         return
-        
-    print(f"Found {len(df)} total images.")
-    print("Class distribution:\n", df['label'].value_counts())
-    print("Split distribution:\n", df['split'].value_counts())
+
+    # Process Labels (Multi-label)
+    print("Processing labels...")
+    all_labels = set()
+    for labels in df['Finding Labels']:
+        for label in labels.split('|'):
+            if label != 'No Finding':
+                all_labels.add(label)
     
-    # The Pneumonia dataset 'val' split is usually tiny (16 images), 
-    # and 'test' is reasonable (624), 'train' is large (5216).
-    # We can keep them as is, or redistribute. 
-    # For now, let's respect the user's folders but handle the case if 'val' is too small.
+    all_labels = sorted(list(all_labels))
+    print(f"Found {len(all_labels)} unique pathologies: {all_labels}")
+    
+    # Create Binary Columns
+    for label in all_labels:
+        df[label] = df['Finding Labels'].apply(lambda x: 1 if label in x else 0)
+        
+    # Split Data by Patient ID (Prevent Data Leakage)
+    if 'Patient ID' not in df.columns:
+        print("ERROR: 'Patient ID' not found in dataframe. Cannot perform patient-aware split.")
+        return
+
+    patient_ids = df['Patient ID'].unique()
+    print(f"Total unique patients: {len(patient_ids)}")
+
+    # Split patients instead of images
+    train_patients, test_patients = train_test_split(patient_ids, test_size=test_size, random_state=random_state)
+    train_patients, val_patients = train_test_split(train_patients, test_size=val_size / (1 - test_size), random_state=random_state)
+
+    print(f"Patient Split: Train={len(train_patients)}, Val={len(val_patients)}, Test={len(test_patients)}")
+
+    # Filter Dataframes based on split patient IDs
+    train = df[df['Patient ID'].isin(train_patients)]
+    val = df[df['Patient ID'].isin(val_patients)]
+    test = df[df['Patient ID'].isin(test_patients)]
+    
+    # Verify no leakage
+    train_p = set(train['Patient ID'])
+    val_p = set(val['Patient ID'])
+    test_p = set(test['Patient ID'])
+    
+    assert train_p.intersection(val_p) == set(), "Data Leakage detected between Train and Val!"
+    assert train_p.intersection(test_p) == set(), "Data Leakage detected between Train and Test!"
+    assert val_p.intersection(test_p) == set(), "Data Leakage detected between Val and Test!"
+
+    print(f"Image Split: Train={len(train)}, Val={len(val)}, Test={len(test)}")
     
     # Save splits
     save_dir = paths['processed_dir']
     if not save_dir.exists():
         save_dir.mkdir(parents=True)
-    
-    # Save standard CSVs
-    for split_name in ['train', 'val', 'test']:
-        split_df = df[df['split'] == split_name].copy()
         
-        # We rename columns to match what our future model might expect (generic 'label')
-        # And keep image_path
-        output_path = save_dir / f'{split_name}.csv'
-        split_df.to_csv(output_path, index=False)
-        print(f"Saved {split_name} set to {output_path} ({len(split_df)} images)")
-
-    print(f"Data processing complete. Ready for training.")
-    return df
+    train.to_csv(save_dir / 'train.csv', index=False)
+    val.to_csv(save_dir / 'val.csv', index=False)
+    test.to_csv(save_dir / 'test.csv', index=False)
+    
+    print(f"Data verification and cleaning complete. Saved to {save_dir}")
+    return train, val, test, all_labels
 
 if __name__ == "__main__":
     clean_and_split()
