@@ -78,7 +78,11 @@ python backend/ml/main.py
 ```bash
 python backend/ml/main.py --epochs 10 --batch_size 32
 ```
+###project report url
+https://drive.google.com/file/d/1S9HVcdG-wouxTpH8QBdaEEQKnO8II91y/view?usp=drive_link
 
+###project ppt
+https://drive.google.com/file/d/11Pny5_N3PaNPYPd75hf76MH4ZkIscp6N/view?usp=drive_link
 ## 🐳 Docker Deployment
 To run the full stack using Docker:
 ```bash
